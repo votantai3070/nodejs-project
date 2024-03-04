@@ -45,7 +45,7 @@ class UserController {
             password,
             name,
             YOB: yob,
-            isAdmin: admin === "on",
+            isAdmin: admin === "true",
           });
           // Hash password
           bcrypt.hash(newUser.password, 10, function (err, hash) {
@@ -71,8 +71,12 @@ class UserController {
       successRedirect: "/",
       failureRedirect: "/users/login",
       failureFlash: true,
-    })(req, res, next);
+    })(req, res, () => {
+      console.log("User logged in:", req.user);
+      next();
+    });
   }
+
   signout(req, res, next) {
     req.logout(function (err) {
       if (err) {
@@ -83,9 +87,27 @@ class UserController {
     });
   }
 
-  dashboard(req, res) {
+  accounts(req, res) {
+    if (!req.user) {
+      return res.redirect("/users/login");
+    }
+
+    if (!req.user.isAdmin) {
+      return res.status(403).send("Access Denied");
+    }
+
     Users.find({}).then((users) => {
-      res.render("account", {
+      res.render("accounts", {
+        title: "List of Users",
+        userData: users,
+        currentUser: req.user,
+      });
+    });
+  }
+
+  profile(req, res) {
+    Users.find({}).then((users) => {
+      res.render("profile", {
         title: "List of Users",
         userData: users,
         currentUser: req.user,
@@ -117,14 +139,25 @@ class UserController {
 
       const yearOfBirth = parseInt(YOB);
 
-      const isAdminUser = isAdmin === "on";
+      User.findOne({ username: username }).then((existingUser) => {
+        if (existingUser && existingUser._id.toString() !== accountId) {
+          return res.status(400).json({ message: "Username already exists" });
+        } else {
+          let isAdminUser;
+          if (req.body.isAdmin) {
+            isAdminUser = true;
+          } else {
+            isAdminUser = false;
+          }
 
-      User.findByIdAndUpdate(
-        accountId,
-        { username, name, YOB: yearOfBirth, isAdmin: isAdminUser },
-        { new: true }
-      ).then(() => {
-        res.redirect("/accounts");
+          User.findByIdAndUpdate(
+            accountId,
+            { username, name, YOB: yearOfBirth, isAdmin: isAdminUser },
+            { new: true }
+          ).then(() => {
+            res.redirect("/users/profile");
+          });
+        }
       });
     } catch (error) {
       return res.status(500).send({
@@ -132,6 +165,7 @@ class UserController {
       });
     }
   }
+
   changePassword = async (req, res) => {
     const userId = req.params.userId;
     const { newPassword, confirmPassword } = req.body;
@@ -160,7 +194,6 @@ class UserController {
 
       user.password = hashedPassword;
       await user.save();
-
       res.status(200).json({ message: "Password updated successfully." });
     } catch (error) {
       console.error("Error changing password:", error);

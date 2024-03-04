@@ -12,7 +12,6 @@ class CategoryController {
       .catch(next);
   }
   create(req, res) {
-    // Kiểm tra xem người dùng có quyền isAdmin không
     if (!req.user.isAdmin) {
       return res
         .status(403)
@@ -27,7 +26,6 @@ class CategoryController {
   }
 
   edit(req, res) {
-    // Kiểm tra xem người dùng có quyền isAdmin không
     if (!req.user.isAdmin) {
       return res
         .status(403)
@@ -43,7 +41,6 @@ class CategoryController {
   }
 
   remove(req, res) {
-    // Kiểm tra xem người dùng có quyền isAdmin không
     if (!req.user.isAdmin) {
       return res
         .status(403)
@@ -59,13 +56,12 @@ class CategoryController {
     const categoriesId = req.params.categoriesId;
 
     Category.findById(categoriesId)
-
       .then((category) => {
         if (!category) {
           return next(new Error("Category not found"));
         }
         res.render("editCategory", {
-          title: "The detail of Category",
+          title: "Edit Category",
           category,
         });
       })

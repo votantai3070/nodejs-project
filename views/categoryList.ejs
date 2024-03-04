@@ -10,13 +10,13 @@
     />
   </head>
   <body>
+    <!-- Header -->
     <header>
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
           <!-- Logo -->
           <a class="navbar-brand" href="#">Logo</a>
-
           <!-- Links on the left side -->
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -34,11 +34,15 @@
               </li>
             </ul>
           </div>
-
           <!-- Links on the right side -->
           <div>
             <% if (user) { %>
-            <span>Welcome, <strong><%= user.username %></strong></span>
+            <span
+              >Welcome,
+              <strong
+                ><a href="/users/profile"><%= user.username %></a></strong
+              ></span
+            >
             <a class="btn btn-outline-danger" href="/users/logout">Logout</a>
             <% } else { %>
             <a class="btn btn-outline-primary me-2" href="/users/login"
@@ -54,26 +58,31 @@
     <div class="container-fluid">
       <div class="container">
         <div class="row">
+          <!-- Button to open modal for creating category -->
           <button
             type="button"
             class="btn btn-primary col-lg-2 my-5"
             data-bs-toggle="modal"
-            data-bs-target="#myModal"
+            data-bs-target="#categoryModal"
+            id="createButton"
           >
             Create Form
           </button>
+
           <div
             class="modal fade"
-            id="myModal"
+            id="categoryModal"
             tabindex="-1"
             aria-labelledby="exampleModalLabel"
             aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
           >
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title" id="exampleModalLabel">
-                    Create Category
+                    Category Form
                   </h5>
                   <button
                     type="button"
@@ -83,7 +92,8 @@
                   ></button>
                 </div>
                 <div class="modal-body">
-                  <form method="POST">
+                  <!-- Form to Create / Edit Category -->
+                  <form method="POST" id="categoryForm">
                     <div class="mb-3">
                       <label for="categoryName" class="form-label"
                         >Category Name</label
@@ -105,19 +115,24 @@
                         type="text"
                         class="form-control"
                         id="description"
-                        placeholder="description input"
+                        placeholder="Description input"
                         name="description"
                         required
                       />
                     </div>
-                    <button type="submit" class="btn btn-primary">
-                      Create
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      id="submitButton"
+                    >
+                      Submit
                     </button>
                   </form>
                 </div>
               </div>
             </div>
           </div>
+          <!-- Table to display categories -->
           <div>
             <table class="table">
               <thead>
@@ -135,11 +150,15 @@
                   <td>
                     <div class="d-flex position-relative">
                       <div class="position-absolute top-100 start-0 actions">
-                        <a
-                          href="/users/categories/update/<%= category.id %>"
-                          class="btn btn-warning btn-sm"
-                          >Edit</a
+                        <button
+                          type="button"
+                          class="btn btn-warning btn-sm btn-edit"
+                          data-bs-toggle="modal"
+                          data-bs-target="#categoryModal"
+                          data-category-id="<%= category.id %>"
                         >
+                          Edit
+                        </button>
                         <button
                           type="button"
                           class="btn btn-danger btn-sm"
@@ -174,7 +193,7 @@
                       </div>
                       <div class="modal-body">
                         Do you want to delete this category <%=
-                        (category.categoryName) %>?
+                        category.categoryName %>?
                       </div>
                       <div class="modal-footer">
                         <button
@@ -200,34 +219,68 @@
         </div>
       </div>
     </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript to handle modal content -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const form = document.querySelector("form");
+        let currentCategoryName = "";
 
-        form.addEventListener("submit", function (event) {
-          if (!validateForm()) {
-            event.preventDefault();
-          }
-        });
+        const modalTitle = document.querySelector(".modal-title");
+        const categoryNameInput = document.getElementById("categoryName");
+        const descriptionInput = document.getElementById("description");
+        const form = document.getElementById("categoryForm");
+        const submitButton = document.getElementById("submitButton");
 
-        function validateForm() {
-          const name = document.getElementById("categoryName").value.trim();
-          const original = document.getElementById("description").value.trim();
-
+        submitButton.addEventListener("click", function (event) {
+          event.preventDefault();
           const existingNames = Array.from(
             document.querySelectorAll(".orchid-row td:first-child")
           ).map((td) => td.textContent.trim());
+          const name = categoryNameInput.value.trim();
 
-          if (existingNames.includes(name)) {
+          if (existingNames.includes(name) && name !== currentCategoryName) {
             alert(
-              "Name must be unique. Another category with the same name already exists!"
+              "Tên danh mục phải là duy nhất. Một danh mục khác có cùng tên đã tồn tại!"
             );
-            return false;
+            return;
           }
 
-          return true;
-        }
+          form.submit();
+        });
+
+        const editButtons = document.querySelectorAll(".btn-edit");
+        editButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            const categoryId = button.dataset.categoryId;
+            currentCategoryName = document
+              .querySelector(`tr[data-id="${categoryId}"] td:nth-child(1)`)
+              .textContent.trim();
+            const categoryName = currentCategoryName;
+            const description = document
+              .querySelector(`tr[data-id="${categoryId}"] td:nth-child(2)`)
+              .textContent.trim();
+
+            modalTitle.textContent = "Edit Category";
+            categoryNameInput.value = categoryName;
+            descriptionInput.value = description;
+            submitButton.textContent = "Update";
+            form.action = `/users/categories/update/${categoryId}`;
+            $("#categoryModal").modal("show");
+          });
+        });
+
+        const createButton = document.getElementById("createButton");
+        createButton.addEventListener("click", function () {
+          modalTitle.textContent = "Create Category";
+          categoryNameInput.value = "";
+          descriptionInput.value = "";
+          submitButton.textContent = "Create";
+          form.action = "/users/categories";
+          $("#categoryModal").modal("show");
+        });
       });
     </script>
   </body>

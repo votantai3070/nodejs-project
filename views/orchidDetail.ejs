@@ -35,40 +35,71 @@
       .comment-box {
         margin-top: 20px;
       }
+      .comment-card {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 10px;
+        margin-top: 20px;
+      }
+
+      .comment-text {
+        color: #333;
+      }
+
+      .comment-author {
+        font-style: italic;
+        color: #666;
+      } /* Custom CSS */
+      .orchid-info {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+      }
+
+      .orchid-info h5 {
+        color: #333;
+      }
+
+      .orchid-info p {
+        margin-bottom: 5px;
+      }
     </style>
   </head>
   <body>
-    <!-- Header -->
     <header>
-      <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-          <!-- Logo -->
           <a class="navbar-brand" href="#">Logo</a>
 
-          <!-- Links on the left side -->
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
                 <a class="nav-link" href="/">Home</a>
               </li>
+              <% if (user) { %>
               <li class="nav-item">
                 <a class="nav-link" href="/users/orchids">Orchids</a>
               </li>
-
               <li class="nav-item">
                 <a class="nav-link" href="/accounts">Account</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="/users/categories">Categories</a>
               </li>
+              <% } %>
             </ul>
           </div>
 
           <!-- Links on the right side -->
           <div>
             <% if (user) { %>
-            <span>Welcome, <strong><%= user.username %></strong></span>
+            <span
+              >Welcome,
+              <strong
+                ><a href="/users/profile"><%= user.username %></a></strong
+              ></span
+            >
             <a class="btn btn-outline-danger" href="/users/logout">Logout</a>
             <% } else { %>
             <a class="btn btn-outline-primary me-2" href="/users/login"
@@ -93,19 +124,32 @@
           />
           <div class="orchid-info">
             <h5 class="orchid-name"><%= orchidData.name %></h5>
-            <p class="orchid-cost">
-              Category: <%= orchidData.category.categoryName %>
+            <% if(orchidData.category) {%>
+            <p class="card-text orchid-cost">
+              Category: <%= orchidData.category.categoryName%>
+            </p>
+            <% } else { %>
+            <p>Category : N/A</p>
+            <% } %>
+            <p class="card-text orchid-cost">Price: <%= orchidData.price%></p>
+            <p class="card-text orchid-cost">
+              Original: <%= orchidData.original%>
+            </p>
+            <p class="card-text orchid-cost">
+              Natural: <%= orchidData.isNatural ? "Yes" : "No"%>
             </p>
 
-            <!-- Hiển thị các comment -->
+            <!-- Comment -->
             <% orchidData.comments.forEach(function(comment) { %>
-            <div class="card mt-3">
-              <div class="card-body">
-                <p class="card-text"><%= comment.comment %></p>
+            <div class="comment-card">
+              <div class="comment-body">
+                <p class="comment-text"><%= comment.comment %></p>
                 <% if (comment.author && comment.author.username) { %>
-                <p class="card-text">Author: <%= comment.author.username %></p>
+                <p class="comment-author">
+                  Author: <%= comment.author.username %>
+                </p>
                 <% } else { %>
-                <p class="card-text">Author: Unknown</p>
+                <p class="comment-author">Author: Unknown</p>
                 <% } %>
               </div>
             </div>
@@ -129,14 +173,6 @@
                 <button type="submit" class="btn btn-primary mt-2">
                   Submit Comment
                 </button>
-              </div>
-
-              <div
-                id="commentError"
-                class="alert alert-danger"
-                style="display: none"
-              >
-                Bạn đã comment trước đó!
               </div>
             </form>
             <% } %>

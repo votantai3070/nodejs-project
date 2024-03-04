@@ -38,9 +38,6 @@ userRouter
   .post(ensureAuthenticated, userController.changePassword);
 userRouter
   .route("/categories")
-  .get(ensureAuthenticated, categoryController.index);
-userRouter
-  .route("/categories")
   .get(ensureAuthenticated, categoryController.index)
   .post(ensureAuthenticated, categoryController.create);
 userRouter
@@ -50,4 +47,5 @@ userRouter
 userRouter
   .route("/category/delete/:categoriesId")
   .get(ensureAuthenticated, categoryController.remove);
+userRouter.route("/profile").get(ensureAuthenticated, userController.profile);
 module.exports = userRouter;
